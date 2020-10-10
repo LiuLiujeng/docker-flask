@@ -1,0 +1,30 @@
+name: Docker
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  # Push image to GitHub Packages.
+  # See also https://docs.docker.com/docker-hub/builds/
+  push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Login to Docker Hub
+        env:
+          USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          docker login --username $USERNAME --password $PASSWORD
+
+      - name: Push to Docker Hub
+        run: |
+            docker build . --file Dockerfile --tag yachujeng/docker-flask:${GITHUB_REF##*/} --pull --rm
+            docker push yachujeng/docker-flask:${GITHUB_REF##*/}
+            docker tag yachujeng/docker-flask:${GITHUB_REF##*/} yachujeng/docker-flask:latest
+            docker push yachujeng/docker-flask:latest
